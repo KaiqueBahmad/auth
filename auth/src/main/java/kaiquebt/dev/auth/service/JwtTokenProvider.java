@@ -29,6 +29,10 @@ public class JwtTokenProvider {
         public BaseUser user;
     }
 
+    public GeneratedTokenResponse generateToken(BaseUser user ) {
+        return generateToken(user, Map.of());
+    }
+
     public GeneratedTokenResponse generateToken(BaseUser user,  Map<String, Object> extraClaims ) {
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationInMs);

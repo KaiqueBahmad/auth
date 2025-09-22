@@ -4,9 +4,7 @@ import kaiquebt.dev.auth.model.BaseUser;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-@Repository
 public interface BaseUserRepository <T extends BaseUser> extends JpaRepository<T, Long> {
     Optional<T> findByUsername(String username);
 

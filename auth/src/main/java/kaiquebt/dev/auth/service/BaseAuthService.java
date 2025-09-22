@@ -3,19 +3,31 @@ package kaiquebt.dev.auth.service;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import kaiquebt.dev.auth.dto.LoginDto;
+import kaiquebt.dev.auth.interfaces.IUserSessionLogInstantiator;
 import kaiquebt.dev.auth.model.BaseUser;
 import kaiquebt.dev.auth.model.BaseUser.RoleType;
+import kaiquebt.dev.auth.model.BaseUserSessionLog;
 import kaiquebt.dev.auth.repository.BaseUserRepository;
+import kaiquebt.dev.auth.service.JwtTokenProvider.GeneratedTokenResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class BaseAuthService<T extends BaseUser> {
-    private final BaseUserRepository<T> repository;
+public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>> {
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final BaseUserRepository<T> baseUserRepository;
+    private final UserSessionLogService<T, U> userSessionLogService;
+    private final IUserSessionLogInstantiator<T, U> sessionInstantiator;
 
     public interface SignupHook<T extends BaseUser> {
         default void beforeValidation(T user, SignupRequest<T> request) {}
@@ -40,12 +52,12 @@ public class BaseAuthService<T extends BaseUser> {
                 hook.beforeValidation(user, request);
             }
             
-            if (repository.existsByUsername(user.getUsername()) || repository.existsByUsername(user.getEmail())) {
+            if (baseUserRepository.existsByUsername(user.getUsername()) || baseUserRepository.existsByUsername(user.getEmail())) {
                 throw new IllegalArgumentException("Username already exists!");
             }
             
             // Check if email exists
-            if (repository.existsByEmail(user.getEmail()) || repository.existsByEmail(user.getUsername())) {
+            if (baseUserRepository.existsByEmail(user.getEmail()) || baseUserRepository.existsByEmail(user.getUsername())) {
                 throw new IllegalArgumentException("Email already exists!");
             }
             
@@ -65,7 +77,7 @@ public class BaseAuthService<T extends BaseUser> {
                 hook.beforeSave(user, request);
             }
             
-            repository.save(user);
+            baseUserRepository.save(user);
             
             // Hook: After save
             if (hook != null) {
@@ -81,6 +93,24 @@ public class BaseAuthService<T extends BaseUser> {
             }
             throw e;
         }
+    }    
+
+    public String login(LoginDto loginDto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginDto.getUsernameOrEmail(),
+                        loginDto.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        T user = this.baseUserRepository.findByEmail(authentication.getName()).get();
+        GeneratedTokenResponse generateToken = jwtTokenProvider.generateToken(user);
+        // loggin session
+        userSessionLogService.registerLoginSession(
+            user,
+            this.sessionInstantiator.instantiate(user)
+        );
+        return generateToken.token;
     }
-    
 }

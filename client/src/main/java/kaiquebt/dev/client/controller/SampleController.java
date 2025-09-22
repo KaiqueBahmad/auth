@@ -7,6 +7,7 @@ import kaiquebt.dev.auth.service.BaseAuthService;
 import kaiquebt.dev.auth.service.BaseAuthService.SignupHook;
 import kaiquebt.dev.auth.service.BaseAuthService.SignupRequest;
 import kaiquebt.dev.client.model.User;
+import kaiquebt.dev.client.model.UserSessionLog;
 import kaiquebt.dev.client.repository.UserRepository;
 
 import java.math.BigDecimal;
@@ -29,7 +30,7 @@ public class SampleController {
     private UserRepository userRepository;
 
     @Autowired
-    private BaseAuthService<User> service;
+    private BaseAuthService<User, UserSessionLog> service;
 
     private static class HookHandler implements SignupHook<User> {
         private static HookHandler instance = new HookHandler();
@@ -77,6 +78,7 @@ public class SampleController {
 
     @GetMapping("/criar")
     public String test() {
+        System.out.println("aeiou");
 
         User user = User.builder()
             .email("kaiquebahmadt@gmail.com")
