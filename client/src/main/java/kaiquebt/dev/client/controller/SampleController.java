@@ -1,7 +1,6 @@
 package kaiquebt.dev.client.controller;
 
 import org.springframework.web.bind.annotation.RestController;
-
 import kaiquebt.dev.auth.model.BaseUser.RoleType;
 import kaiquebt.dev.auth.service.BaseAuthService;
 import kaiquebt.dev.auth.service.BaseAuthService.SignupHook;
@@ -9,19 +8,11 @@ import kaiquebt.dev.auth.service.BaseAuthService.SignupRequest;
 import kaiquebt.dev.client.model.User;
 import kaiquebt.dev.client.model.UserSessionLog;
 import kaiquebt.dev.client.repository.UserRepository;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 public class SampleController {
@@ -73,7 +64,6 @@ public class SampleController {
             // TODO Auto-generated method stub
             SignupHook.super.onError(error, user, request);
         }
-
     }
 
     @GetMapping("/criar")
@@ -109,6 +99,7 @@ public class SampleController {
 
         return "teste";
     }
+    
     @GetMapping("listar")
     public List<User> getMethodName() {
         return this.userRepository.findAll();
