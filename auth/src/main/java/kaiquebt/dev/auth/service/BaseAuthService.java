@@ -1,7 +1,9 @@
 package kaiquebt.dev.auth.service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import kaiquebt.dev.auth.ResendEmailResponse;
 import kaiquebt.dev.auth.dto.LoginDto;
 import kaiquebt.dev.auth.interfaces.IUserSessionLogInstantiator;
 import kaiquebt.dev.auth.model.BaseUser;
@@ -28,6 +31,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
     private final BaseUserRepository<T> baseUserRepository;
     private final UserSessionLogService<T, U> userSessionLogService;
     private final IUserSessionLogInstantiator<T, U> sessionInstantiator;
+    private final EmailService<T> emailService;
 
     public interface SignupHook<T extends BaseUser> {
         default void beforeValidation(T user, SignupRequest<T> request) {}
@@ -112,5 +116,42 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             this.sessionInstantiator.instantiate(user)
         );
         return generateToken.token;
+    }
+
+    public ResendEmailResponse sendEmailConfirmation(CustomUserDetails userDetails) {
+        @SuppressWarnings("unchecked")
+        T user = (T) userDetails.getUser();
+        
+        if (user.getEmailConfirmed()) {
+            return ResendEmailResponse.builder()
+                .after(0L)
+                .message("Email já foi confirmado")
+                .resended(false)
+            .build();
+        }
+
+        long canResentAfter = user.canResendAfter();
+        if (canResentAfter != 0) {
+            return ResendEmailResponse.builder()
+            .after(canResentAfter)
+            .message("Email já foi enviado recentemente. Tente novamente em alguns minutos")
+            .resended(false)
+            .build();
+        }
+
+        String token = UUID.randomUUID().toString();
+
+        user.setEmailConfirmationToken(token);
+        user.setTokenExpiresAt(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
+        
+        this.baseUserRepository.save(user);
+
+        emailService.sendMagicLink(user);
+
+        return ResendEmailResponse.builder()
+            .after(0L)
+            .message("Email de confirmação enviado com sucesso! Verifique sua caixa de entrada")
+            .resended(true)
+        .build();
     }
 }

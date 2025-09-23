@@ -13,5 +13,10 @@
     "name": "kaiquebt.dev.auth.base-path",
     "type": "java.lang.String",
     "description": "A description for 'kaiquebt.dev.auth.base-path'"
+  },
+  {
+    "name": "kaiquebt.dev.auth.external-url",
+    "type": "java.lang.String",
+    "description": "A description for 'kaiquebt.dev.auth.external-url'"
   }
 ]}
