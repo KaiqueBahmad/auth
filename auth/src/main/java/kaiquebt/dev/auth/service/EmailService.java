@@ -33,7 +33,7 @@ public class EmailService<T extends BaseUser> {
             helper.setFrom(fromEmail);
             helper.setSubject(emailTemplateBean.getEmailConfirmTitle());
             
-            String magicLinkUrl = externalUrl + "/api/email/confirm/" + user.getEmailConfirmationToken();
+            String magicLinkUrl = externalUrl + "/api/confirm-email/" + user.getEmailConfirmationToken();
             String html = emailTemplateBean.build(user, magicLinkUrl);
             
             helper.setText(html, true);

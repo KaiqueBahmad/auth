@@ -9,15 +9,13 @@ import kaiquebt.dev.auth.service.BaseAuthService;
 import kaiquebt.dev.auth.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 
 @RestController
@@ -45,8 +43,8 @@ public class Controller {
 
     @PostMapping("/resend-email")
     public ResponseEntity<ResendEmailResponse> resendEmail(@RequestParam String email) {
-        // trigger resend email confirmation, should only work if account is not confirmed
-        return null;
+        ResendEmailResponse response = authService.sendEmailConfirmation(email);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/confirm-email")

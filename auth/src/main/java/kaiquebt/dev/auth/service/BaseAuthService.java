@@ -122,10 +122,18 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         return generateToken.token;
     }
 
-    public ResendEmailResponse sendEmailConfirmation(CustomUserDetails userDetails) {
-        @SuppressWarnings("unchecked")
-        T user = (T) userDetails.getUser();
+    public ResendEmailResponse sendEmailConfirmation(String email) {
+        Optional<T> userOpt = this.baseUserRepository.findByEmail(email);
         
+        if (userOpt.isEmpty()) {
+            return ResendEmailResponse.builder()
+                .after(0L)
+                .message("Usuário não encontrado para email: "+(email != null ? email : ""))
+                .resended(false)
+            .build();
+        }
+        
+        T user = userOpt.get();
         if (user.getEmailConfirmed()) {
             return ResendEmailResponse.builder()
                 .after(0L)
