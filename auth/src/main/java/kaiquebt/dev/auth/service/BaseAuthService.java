@@ -160,4 +160,32 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             .resended(true)
         .build();
     }
+
+    public String confirmEmail(String token) {
+        Optional<T> userOpt = this.baseUserRepository.findByEmailConfirmationToken(token);
+        
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Token inválido");
+        }
+        
+        T user = userOpt.get();
+        if (user.getEmailConfirmed()) {
+            // cleaning token
+            user.setEmailConfirmationToken(null);
+            user.setTokenExpiresAt(null);
+            this.baseUserRepository.save(user);
+            throw new IllegalArgumentException("Email já foi confirmado");
+        }
+        
+        if (user.getTokenExpiresAt() == null || user.getTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token expirado");
+        }
+        
+        user.setEmailConfirmed(true);
+        user.setEmailConfirmationToken(null);
+        user.setTokenExpiresAt(null);
+        this.baseUserRepository.save(user);
+        
+        return jwtTokenProvider.generateToken(user).token;
+    }
 }

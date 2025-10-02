@@ -10,6 +10,8 @@ import kaiquebt.dev.auth.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,9 +66,28 @@ public class Controller {
     }
 
     @GetMapping("/confirm-email")
-    public ResponseEntity<ResendEmailResponse> confirmEmail(@RequestParam String emailConfirmationToken) {
-        // magic link that confirms the account and give a single time use JWT, then we can use the define-first-password
-        return null;
+    public ResponseEntity<?> confirmEmail(@RequestParam String token) {
+        try {
+            return ResponseEntity.ok(ConfirmEmailResponse.builder()
+                .token(this.authService.confirmEmail(token))
+                .build()
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                Map.of(
+                    "error", e.toString(),
+                    "message", e.getMessage()
+                )
+            );
+        } catch (Exception e) {
+            log.error("Error on confirm email with token "+token, e);
+            return ResponseEntity.internalServerError().body(
+                Map.of(
+                    "error", "Ocorreu um erro ao confirmar o email. Tente novamente mais tarde",
+                    "message", "Ocorreu um erro ao confirmar o email. Tente novamente mais tarde"
+                )
+            );
+        }
     }
 
     @PostMapping("/define-first-password")
