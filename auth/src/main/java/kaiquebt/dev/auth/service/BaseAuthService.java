@@ -2,6 +2,7 @@ package kaiquebt.dev.auth.service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -71,16 +72,19 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             }
             
             // Create new user
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            // Password will be setted on email confirmation
+            // user.setPassword(passwordEncoder.encode(user.getPassword()));
             
             // Set roles from request
             user.setRoles(new HashSet<>(request.getRoles()));
+            
+            
+            emailService.sendMagicLink(user);
             
             // Hook: Before save
             if (hook != null) {
                 hook.beforeSave(user, request);
             }
-            
             baseUserRepository.save(user);
             
             // Hook: After save
