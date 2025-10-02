@@ -44,17 +44,50 @@ public class Controller {
     
 
     @PostMapping("/resend-email")
-    public ResponseEntity<ResendEmailResponse> resendEmail(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        ResendEmailResponse response = authService.sendEmailConfirmation(userDetails);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ResendEmailResponse> resendEmail(@RequestParam String email) {
+        // trigger resend email confirmation, should only work if account is not confirmed
+        return null;
     }
 
+    @GetMapping("/confirm-email")
+    public ResponseEntity<ResendEmailResponse> confirmEmail(@RequestParam String emailConfirmationToken) {
+        // magic link that confirms the account and give a single time use JWT, then we can use the define-first-password
+        return null;
+    }
 
-    // @GetMapping("/check-email")
-    // public YesOrNo checkEmail(@AuthenticationPrincipal CustomUserDetails userDetails) {
-    //     boolean confirmed = authService.checkEmail(userDetails.getUser());
-    //     return YesOrNo.builder().status(confirmed).build();
-    // }
+    @PostMapping("/define-first-password")
+    public String defineFirstPassword(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+        // @RequestBody SetFirstPasswordDto dto
+    ) {
+        // Should only work if was never set a password on this account
+        return null;
+    }
+
+    @PostMapping("recover-account/send-email")
+    public ResponseEntity<String> sendRecoverEmail(
+        // @RequestBody SendRecoverEmailDto dto
+    ) {
+        // Should not work while the account is not confirmed
+        return null;
+    }
+
+    @PostMapping("recover-account/verify")
+    public ResponseEntity<String> verifyToken(
+        // @RequestBody VerifyRecoverTokenDto dto
+    ) {
+        // Verify if the token for recovering account is valid
+        // maybe if it is we give some seconds extra of expiration for the token 
+        return null;
+    }
+
+    @PostMapping("recover-account/change-password")
+    public ResponseEntity<String> changePassword(
+        // @RequestBody ChangePasswordDto dto
+    ) {
+        // should not work if the account is not confirmed
+        return null;
+    }
 
     // @PostMapping("refresh")
     // public ResponseEntity<JwtAuthResponse> refresh(@RequestBody RefreshJWTDto dto) {
@@ -69,33 +102,5 @@ public class Controller {
     //     }
                
     //     return ResponseEntity.ok(response);
-    // }
-
-    // @PostMapping("recover-account/send-email")
-    // public ResponseEntity<String> sendRecoverEmail(@RequestBody SendRecoverEmailDto dto) {
-        
-    //     String response = this.authService.recoverAccountSendEmail(dto.getEmail());
-
-    //     if (response == null) {
-    //         return ResponseEntity.ok("Verifique seu email para o código de verificação");
-    //     } else {
-    //         return ResponseEntity.badRequest().body(response);
-    //     }
-
-    // }
-
-    // @PostMapping("recover-account/verify")
-    // public ResponseEntity<String> verifyToken(@RequestBody VerifyRecoverTokenDto dto) {
-    //     return this.authService.verifyToken(dto.getEmail(), dto.getToken());
-    // }
-
-    // @PostMapping("recover-account/change-password")
-    // public ResponseEntity<String> changePassword(@RequestBody ChangePasswordDto dto) {
-    //     if (!dto.isPasswordValid()) {
-    //         return ResponseEntity.badRequest().body(dto.getPasswordError());
-    //     }
-
-    //     return this.authService.changePassword(dto.getEmail(), dto.getToken(), dto.getPassword());
-    // }
-    
+    // }    
 }
