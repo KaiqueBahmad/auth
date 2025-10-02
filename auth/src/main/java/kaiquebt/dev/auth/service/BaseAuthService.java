@@ -188,4 +188,20 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         
         return jwtTokenProvider.generateToken(user).token;
     }
+
+    public void defineFirstPassword(Long id, String password) {
+        Optional<T> userOpt = this.baseUserRepository.findById(id);
+        
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Usuário não encontrado");
+        }
+        
+        T user = userOpt.get();
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Senha já foi definida anteriormente");
+        }
+
+        user.setPassword(passwordEncoder.encode(password));
+        this.baseUserRepository.save(user);
+    }
 }

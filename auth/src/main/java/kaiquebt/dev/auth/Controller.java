@@ -91,12 +91,34 @@ public class Controller {
     }
 
     @PostMapping("/define-first-password")
-    public String defineFirstPassword(
-        @AuthenticationPrincipal CustomUserDetails userDetails
-        // @RequestBody SetFirstPasswordDto dto
+    public ResponseEntity<?> defineFirstPassword(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody SetFirstPasswordDto dto
     ) {
         // Should only work if was never set a password on this account
-        return null;
+        try {
+            this.authService.defineFirstPassword(userDetails.getUser().getId(), dto.getPassword());
+            return ResponseEntity.ok(
+                Map.of(
+                    "message", "Senha definida com sucesso"
+                )
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                Map.of(
+                    "error", e.toString(),
+                    "message", e.getMessage()
+                )
+            );
+        } catch (Exception e) {
+            log.error("Error on define first password for user id "+userDetails.getUser().getId(), e);
+            return ResponseEntity.internalServerError().body(
+                Map.of(
+                    "error", "Ocorreu um erro ao definir a senha. Tente novamente mais tarde",
+                    "message", "Ocorreu um erro ao definir a senha. Tente novamente mais tarde"
+                )
+            );
+        }
     }
 
     @PostMapping("recover-account/send-email")
