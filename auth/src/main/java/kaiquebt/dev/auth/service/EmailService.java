@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -24,6 +25,9 @@ public class EmailService<T extends BaseUser> {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${kaiquebt.dev.auth.base-path:/api/auth/}")
+    private String apiMapping;
+
     public void sendMagicLink(T user) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -33,7 +37,13 @@ public class EmailService<T extends BaseUser> {
             helper.setFrom(fromEmail);
             helper.setSubject(emailTemplateBean.getEmailConfirmTitle());
             
-            String magicLinkUrl = externalUrl + "/api/confirm-email/" + user.getEmailConfirmationToken();
+            String magicLinkUrl = UriComponentsBuilder.fromUriString(externalUrl)
+                .path(apiMapping + "confirm-email")
+                .queryParam("token", user.getEmailConfirmationToken())
+                .build()
+                .toUriString();
+
+                
             String html = emailTemplateBean.build(user, magicLinkUrl);
             
             helper.setText(html, true);
