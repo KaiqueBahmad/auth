@@ -204,4 +204,36 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         user.setPassword(passwordEncoder.encode(password));
         this.baseUserRepository.save(user);
     }
+
+    public String sendRecoverEmail(String email) {
+        Optional<T> userOpt = this.baseUserRepository.findByEmail(email);
+        
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException(
+                "Usuário não encontrado para email: "+(email != null ? email : "")
+            );
+        }
+        
+        T user = userOpt.get();
+        if (!user.getEmailConfirmed()) {
+            throw new IllegalArgumentException("Email não foi confirmado");
+        }
+
+        String token = UUID.randomUUID().toString();
+        
+        // Last recover must be more than 1 day ago
+        if (user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now().minusDays(1))) {
+            return "Um email de recuperação já foi enviado recentemente. Tente novamente mais tarde. O limite é de 1 recuperação a cada 24 horas.";
+        }
+
+        user.setPasswordRecoverToken(token);
+        user.setPasswordRecoverExpiration(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
+        
+
+        
+        emailService.sendRecoverEmail(user);
+        
+        this.baseUserRepository.save(user);
+        return null;
+    }
 }

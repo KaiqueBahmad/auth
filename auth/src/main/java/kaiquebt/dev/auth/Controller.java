@@ -122,11 +122,30 @@ public class Controller {
     }
 
     @PostMapping("recover-account/send-email")
-    public ResponseEntity<String> sendRecoverEmail(
-        // @RequestBody SendRecoverEmailDto dto
+    public ResponseEntity<?> sendRecoverEmail(
+        @RequestBody SendRecoverEmailDto dto
     ) {
         // Should not work while the account is not confirmed
-        return null;
+        try {
+            String importantAdvice = this.authService.sendRecoverEmail(dto.getEmail());
+            if (importantAdvice != null && !importantAdvice.isEmpty()) {
+                return ResponseEntity.ok(
+                    Map.of(
+                        "message", importantAdvice
+                    )
+                );
+            }
+        } catch (IllegalArgumentException e) {
+            
+        } catch (Exception e) {            
+            log.error("Error on send recover email to "+dto, e);
+        }
+        
+        return ResponseEntity.ok(
+            Map.of(
+                "message", "Se o email existir em nossa base de dados, e seu email estiver confirmado, você receberá um email com instruções para recuperar sua conta"
+            )
+        );
     }
 
     @PostMapping("recover-account/verify")
