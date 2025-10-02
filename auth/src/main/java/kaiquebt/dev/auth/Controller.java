@@ -123,11 +123,11 @@ public class Controller {
 
     @PostMapping("recover-account/send-email")
     public ResponseEntity<?> sendRecoverEmail(
-        @RequestBody SendRecoverEmailDto dto
+        @RequestParam String email
     ) {
         // Should not work while the account is not confirmed
         try {
-            String importantAdvice = this.authService.sendRecoverEmail(dto.getEmail());
+            String importantAdvice = this.authService.sendRecoverEmail(email);
             if (importantAdvice != null && !importantAdvice.isEmpty()) {
                 return ResponseEntity.ok(
                     Map.of(
@@ -138,7 +138,7 @@ public class Controller {
         } catch (IllegalArgumentException e) {
             
         } catch (Exception e) {            
-            log.error("Error on send recover email to "+dto, e);
+            log.error("Error on send recover email to "+email, e);
         }
         
         return ResponseEntity.ok(

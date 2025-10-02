@@ -222,8 +222,15 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         String token = UUID.randomUUID().toString();
         
         // Last recover must be more than 1 day ago
-        if (user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now().minusDays(1))) {
+        boolean hasActiveRecover = user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now());
+        if (
+            !hasActiveRecover &&
+            user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now().minusDays(1))
+        ) {
             return "Um email de recuperação já foi enviado recentemente. Tente novamente mais tarde. O limite é de 1 recuperação a cada 24 horas.";
+        }
+        if (hasActiveRecover) {
+            return null;
         }
 
         user.setPasswordRecoverToken(token);

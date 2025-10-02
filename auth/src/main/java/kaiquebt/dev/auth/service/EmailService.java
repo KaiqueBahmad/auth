@@ -44,7 +44,7 @@ public class EmailService<T extends BaseUser> {
                 .toUriString();
 
                 
-            String html = emailTemplateBean.build(user, magicLinkUrl);
+            String html = emailTemplateBean.buildEmailConfirm(user, magicLinkUrl);
             
             helper.setText(html, true);
             
@@ -64,15 +64,8 @@ public class EmailService<T extends BaseUser> {
             helper.setTo(user.getEmail());
             helper.setFrom(fromEmail);
             helper.setSubject(emailTemplateBean.getRecoverAccountTitle());
-            
-            String recoverLinkUrl = UriComponentsBuilder.fromUriString(externalUrl)
-                .path(apiMapping + "recover-account/verify")
-                .queryParam("token", user.getPasswordRecoverToken())
-                .build()
-                .toUriString();
-
                 
-            String html = emailTemplateBean.buildRecoverAccount(user, recoverLinkUrl);
+            String html = emailTemplateBean.buildRecoverAccount(user, user.getPasswordRecoverToken());
             
             helper.setText(html, true);
             
