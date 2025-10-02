@@ -126,20 +126,14 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         Optional<T> userOpt = this.baseUserRepository.findByEmail(email);
         
         if (userOpt.isEmpty()) {
-            return ResendEmailResponse.builder()
-                .after(0L)
-                .message("Usuário não encontrado para email: "+(email != null ? email : ""))
-                .resended(false)
-            .build();
+            throw new IllegalArgumentException(
+                "Usuário não encontrado para email: "+(email != null ? email : "")
+            );
         }
         
         T user = userOpt.get();
         if (user.getEmailConfirmed()) {
-            return ResendEmailResponse.builder()
-                .after(0L)
-                .message("Email já foi confirmado")
-                .resended(false)
-            .build();
+            throw new IllegalArgumentException("Email já foi confirmado");
         }
 
         long canResentAfter = user.canResendAfter();
@@ -155,10 +149,10 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
 
         user.setEmailConfirmationToken(token);
         user.setTokenExpiresAt(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
+        emailService.sendMagicLink(user);
         
         this.baseUserRepository.save(user);
 
-        emailService.sendMagicLink(user);
 
         return ResendEmailResponse.builder()
             .after(0L)

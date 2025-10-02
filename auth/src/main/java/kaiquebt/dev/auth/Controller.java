@@ -8,6 +8,7 @@ import kaiquebt.dev.auth.dto.LoginDto;
 import kaiquebt.dev.auth.service.BaseAuthService;
 import kaiquebt.dev.auth.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RestController
 @RequestMapping("${kaiquebt.dev.auth.base-path:/api/auth}")
 @RequiredArgsConstructor
+@Slf4j
 public class Controller {
 
     private final BaseAuthService authService;
@@ -43,8 +45,22 @@ public class Controller {
 
     @PostMapping("/resend-email")
     public ResponseEntity<ResendEmailResponse> resendEmail(@RequestParam String email) {
-        ResendEmailResponse response = authService.sendEmailConfirmation(email);
-        return ResponseEntity.ok(response);
+        if (email == null || email.strip().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        try {
+            ResendEmailResponse response = authService.sendEmailConfirmation(email);
+            return ResponseEntity.ok(response);            
+        } catch (Exception e) {
+            log.error("Error on resend email confirmation to "+email);
+            log.error(e.toString());
+            return ResponseEntity.ok(ResendEmailResponse.builder()
+                .after(0L)
+                .message("Email de confirmação enviado com sucesso! Verifique sua caixa de entrada")
+                .resended(true)
+                .build()
+            );
+        }
     }
 
     @GetMapping("/confirm-email")
