@@ -55,5 +55,34 @@ public class EmailService<T extends BaseUser> {
             throw new RuntimeException("Erro ao enviar email de confirmação", e);
         }
     }
+
+    public void sendRecoverEmail(T user) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setTo(user.getEmail());
+            helper.setFrom(fromEmail);
+            helper.setSubject(emailTemplateBean.getRecoverAccountTitle());
+            
+            String recoverLinkUrl = UriComponentsBuilder.fromUriString(externalUrl)
+                .path(apiMapping + "recover-account/verify")
+                .queryParam("token", user.getPasswordRecoverToken())
+                .build()
+                .toUriString();
+
+                
+            String html = emailTemplateBean.buildRecoverAccount(user, recoverLinkUrl);
+            
+            helper.setText(html, true);
+            
+            mailSender.send(message);
+            log.info("Email de recuperação enviado com sucesso para: {}", user.getEmail()); 
+        } catch (MessagingException e) {
+            log.error("Erro ao enviar email de recuperação para {}: {}", user.getEmail(), e.getMessage());
+            throw new RuntimeException("Erro ao enviar email de recuperação", e);
+        }
+
+    }
     
 }
