@@ -34,13 +34,24 @@ kaiquebt.dev.auth.base-path=/api/auth/
 kaiquebt.dev.auth.external-url=
 
 # Email configuration for enabling the email confirmation features
+# Since spring mail is a dependencie we must define this variable
 spring.mail.host=
 spring.mail.port=
 spring.mail.username=
 spring.mail.password=
 spring.mail.properties.mail.smtp.ssl.enable=
 spring.mail.properties.mail.smtp.starttls.enable=
+
+# (Optional) email override for the lib (in case you want to use spring.mail for other purposes)
+kaiquebt.dev.auth.mail.host=
+kaiquebt.dev.auth.mail.port=
+kaiquebt.dev.auth.mail.username=
+kaiquebt.dev.auth.mail.password=
+kaiquebt.dev.auth.mail.properties.mail.smtp.ssl.enable=
+kaiquebt.dev.auth.mail.properties.mail.smtp.starttls.enable=
 ```
+
+
 
 ### Routes created by the template
 > **Note:** The signup/registration route is not included in this template and must be implemented by the user. See the [Implementing Signup](#implementing-signup) section for more details.
