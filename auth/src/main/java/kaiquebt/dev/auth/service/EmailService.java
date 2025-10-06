@@ -1,5 +1,6 @@
 package kaiquebt.dev.auth.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -13,11 +14,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService<T extends BaseUser> {
     private final IEmailTemplateBean<T> emailTemplateBean;
     private final JavaMailSender mailSender;
+
+    public EmailService(
+        IEmailTemplateBean emailTemplateBean,
+        @Qualifier("customMailSender") JavaMailSender mailSender
+    ) {
+        this.emailTemplateBean = emailTemplateBean;
+        this.mailSender = mailSender;
+    }
 
     @Value("${kaiquebt.dev.auth.external-url}")
     private String externalUrl;

@@ -207,7 +207,6 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
 
     public String sendRecoverEmail(String email) {
         Optional<T> userOpt = this.baseUserRepository.findByEmail(email);
-        
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException(
                 "Usuário não encontrado para email: "+(email != null ? email : "")
