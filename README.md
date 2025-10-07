@@ -41,7 +41,7 @@ spring.mail.password=
 spring.mail.properties.mail.smtp.ssl.enable=
 spring.mail.properties.mail.smtp.starttls.enable=
 
-# (Optional) email override for the lib (in case you want to use spring.mail for other purposes)
+# (Optional) email override for the lib (in case you want to use the default spring.mail bean for other purposes in your application)
 kaiquebt.dev.auth.mail.host=
 kaiquebt.dev.auth.mail.port=
 kaiquebt.dev.auth.mail.username=
