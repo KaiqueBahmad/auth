@@ -4,7 +4,6 @@ This lib will help you to faster implement auth on SpringBoot Project
 
 ## Dependencies:
 - Spring Boot (3.5.6)
-- Postgres (Planning to remove this dependencie)
 
 ## Getting Started
 In order to start using this Auth Template you must set some variables on your application.properties, configure some beans for customazing the behaviour of the template, and implement some JPA Entities, on client folder there is a full implementation that may help you.
