@@ -9,6 +9,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import kaiquebt.dev.auth.config.MailSenderFactory;
 import kaiquebt.dev.auth.model.BaseUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +22,10 @@ public class EmailService<T extends BaseUser> {
 
     public EmailService(
         IEmailTemplateBean emailTemplateBean,
-        @Qualifier("customMailSender") JavaMailSender mailSender
+        MailSenderFactory mailSenderFactory
     ) {
         this.emailTemplateBean = emailTemplateBean;
-        this.mailSender = mailSender;
+        this.mailSender = mailSenderFactory.getMailSender();
     }
 
     @Value("${kaiquebt.dev.auth.external-url}")

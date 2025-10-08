@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import kaiquebt.dev.auth.config.MailConfiguration;
 
 @RestController
 public class SampleController {

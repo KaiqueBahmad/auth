@@ -149,6 +149,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
 
         user.setEmailConfirmationToken(token);
         user.setTokenExpiresAt(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
+
         emailService.sendMagicLink(user);
         
         this.baseUserRepository.save(user);

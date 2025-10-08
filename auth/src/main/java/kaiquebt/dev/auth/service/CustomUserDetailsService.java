@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService<T extends BaseUser> implements UserDetailsService {
 
-    private final BaseUserRepository<?> baseUserRepository;
+    private final BaseUserRepository<T> baseUserRepository;
 
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {

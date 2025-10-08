@@ -15,20 +15,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MailConfiguration {
     
-    @Bean
-    public JavaMailSender customMailSender(
-            CustomMailProperties customProps,
-            @Lazy JavaMailSender defaultMailSender) {
-        
-        // Se custom properties estiver configurado, cria sender customizado
-        if (customProps.isConfigured()) {
-            log.info("✓ Using custom mail configuration: kaiquebt.dev.auth.mail");
-            return createCustomMailSender(customProps);
+    public static class CustomMailSenderWrapper {
+        private final JavaMailSender mailSender;
+
+        public CustomMailSenderWrapper() {
+            this.mailSender = null;
         }
-        
-        // Senão, retorna o bean padrão do Spring
-        log.warn("✓ Fallback to default Spring mail configuration: spring.mail");
-        return defaultMailSender;
+
+        public CustomMailSenderWrapper(JavaMailSender mailSender) {
+            this.mailSender = mailSender;
+        }
+
+        public boolean isPresent() {
+            return mailSender != null;
+        }
+
+        public JavaMailSender getMailSender() {
+            return mailSender;
+        }
+    }
+
+    @Bean
+    public CustomMailSenderWrapper customMailSenderWrapper(CustomMailProperties customProps) {        
+        if (customProps.isConfigured()) {
+            return new CustomMailSenderWrapper(createCustomMailSender(customProps));
+        }
+        return new CustomMailSenderWrapper();
     }
     
     private JavaMailSender createCustomMailSender(CustomMailProperties props) {
