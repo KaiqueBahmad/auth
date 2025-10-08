@@ -54,22 +54,24 @@ kaiquebt.dev.auth.mail.properties.mail.smtp.starttls.enable=
 
 ### Routes created by the template
 > **Note:** The signup/registration route is not included in this template and must be implemented by the user. See the [Implementing Signup](#implementing-signup) section for more details.
+> 
+**POST `/login`** - Authenticates users with credentials and returns a JWT access token.
 
-**POST `/api/auth/login`** - Authenticates users with credentials and returns a JWT access token.
+**POST `/resend-email`** - Resends the email confirmation message to a specified email address.
 
-**POST `/api/auth/resend-email`** - Resends the email confirmation message to a specified email address.
+**GET `/confirm-email`** - Checks if the authenticated user's email has been confirmed.
+
+**POST `/define-first-password`** - When confirming the email you will receive a JWT as response, you can use this session to use `/define-first-password` route, if the user loses its session before defining the password you can use the recover-account routes to set the first password without a session. 
 
 **Under development:**
 
-**GET `/api/auth/check-email`** - Checks if the authenticated user's email has been confirmed.
+**POST `/refresh`** - Refreshes an expired JWT token. Supports admin impersonation by handling both user and impersonator tokens simultaneously.
 
-**POST `/api/auth/refresh`** - Refreshes an expired JWT token. Supports admin impersonation by handling both user and impersonator tokens simultaneously.
+**POST `/recover-account/send-email`** - Initiates password recovery by sending a verification code to the user's email.
 
-**POST `/api/auth/recover-account/send-email`** - Initiates password recovery by sending a verification code to the user's email.
+**POST `/recover-account/verify`** - Validates the recovery token sent to the user's email.
 
-**POST `/api/auth/recover-account/verify`** - Validates the recovery token sent to the user's email.
-
-**POST `/api/auth/recover-account/change-password`** - Completes the password recovery process by setting a new password after token verification.
+**POST `/recover-account/change-password`** - Completes the password recovery process by setting a new password after token verification.
 
 ### Models to be implemented
 > In order to manage the persistence while keeping you free to personalize the entities and behaviour, we just declare Mapped Superclasses instead of real implementations, that would limit the user of the lib
