@@ -557,7 +557,6 @@ public Page<SessionHistoryDto> getUserSessions(Long userId, int page, int size) 
 The library includes predefined role types:
 
 - `ROLE_USER` - Standard user
-- `ROLE_AFFILIATE` - Affiliate user
 - `ROLE_ADMIN` - Administrator
 - `ROLE_BANNED` - Banned user
 
