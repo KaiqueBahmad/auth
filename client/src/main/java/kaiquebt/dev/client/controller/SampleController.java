@@ -49,9 +49,9 @@ public class SampleController {
 
         @Override
         public void beforeSave(User user, SignupRequest<User> request) {
-            user.setEmailConfirmationToken(UUID.randomUUID().toString());
-            user.setEmailConfirmed(false);
-            user.setPasswordRecoverTries(1);
+            // user.setEmailConfirmationToken(UUID.randomUUID().toString());
+            // user.setEmailConfirmed(false);
+            // user.setPasswordRecoverTries(1);
         }
 
         @Override

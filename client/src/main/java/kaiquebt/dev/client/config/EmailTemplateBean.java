@@ -98,7 +98,7 @@ public class EmailTemplateBean implements IEmailTemplateBean<User> {
     @Override
     public String buildRecoverAccount(User user, String token) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm");
-        String expiresAt = user.getPasswordRecoverExpiration().format(formatter);
+        String expiresAt = user.getPasswordRecovery().getTokenExpiresAt().format(formatter);
 
 
         return String.format("""
