@@ -377,33 +377,116 @@ class ClientApplicationTests {
     }
 
     @Test
-    void testSignupWithWeakPassword() {
-
-    }
-
-    @Test
     void testSignupWithEmptyFields() {
+        // Test with empty username
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> authService.signup(
+                    new SignupRequest<User>() {
+                        @Override
+                        public User getUser() {
+                            return User.builder()
+                                    .username("")
+                                    .email("kaiq@gmail.com")
+                                    .password("123456")
+                                    .build();
+                        }
 
+                        @Override
+                        public BaseAuthService.SignupHook<User> getHook() {
+                            return null;
+                        }
+                    })
+        );
+
+        // Test with empty email
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> authService.signup(
+                    new SignupRequest<User>() {
+                        @Override
+                        public User getUser() {
+                            return User.builder()
+                                    .username("kaique")
+                                    .email("")
+                                    .password("123456")
+                                    .build();
+                        }
+
+                        @Override
+                        public BaseAuthService.SignupHook<User> getHook() {
+                            return null;
+                        }
+                    })
+        );
+
+        // Test with null username
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> authService.signup(
+                    new SignupRequest<User>() {
+                        @Override
+                        public User getUser() {
+                            return User.builder()
+                                    .username(null)
+                                    .email("kaiq@gmail.com")
+                                    .password("123456")
+                                    .build();
+                        }
+
+                        @Override
+                        public BaseAuthService.SignupHook<User> getHook() {
+                            return null;
+                        }
+                    })
+        );
+
+        // Test with null email
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> authService.signup(
+                    new SignupRequest<User>() {
+                        @Override
+                        public User getUser() {
+                            return User.builder()
+                                    .username("kaique")
+                                    .email(null)
+                                    .password("123456")
+                                    .build();
+                        }
+
+                        @Override
+                        public BaseAuthService.SignupHook<User> getHook() {
+                            return null;
+                        }
+                    })
+        );
     }
 
     @Test
     void testConfirmEmailWithNullToken() {
 
-    }
+        authService.signup(
+        new SignupRequest<User>() {
+            @Override
+            public User getUser() {
+                return User.builder()
+                        .username("kaique")
+                        .email("kaiq@gmail.com")
+                        .password("123456")
+                        .build();
+            }
 
-    @Test
-    void testMultipleUsersRegistration() {
+            @Override
+            public BaseAuthService.SignupHook<User> getHook() {
+                return null;
+            }
+        });
 
-    }
-
-    @Test
-    void testEmailConfirmationTokenUniqueness() {
-
-    }
-
-    @Test
-    void testUserNotFoundAfterConfirmation() {
-
+        ResponseEntity<Controller.StandardResponse<ConfirmEmailResponse>> response = controller.confirmEmail(null);
+        assertNotNull(response.getBody(), "Response body não deve ser null");
+        assertFalse(response.getBody().isSuccess(), "Confirmação deve falhar com token null");
+        assertEquals(400, response.getStatusCode().value(), "Status code deve ser 400 para token null");
     }
 
 }

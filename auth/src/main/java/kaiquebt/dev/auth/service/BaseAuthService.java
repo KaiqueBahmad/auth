@@ -37,8 +37,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
     private final EmailService<T> emailService;
 
     public interface SignupHook<T extends BaseUser> {
-        default void beforeValidation(T user, SignupRequest<T> request) {}
-        default void afterValidation(T user, SignupRequest<T> request) {}
+        default void customValidation(T user, SignupRequest<T> request) throws IllegalArgumentException {}
         default void beforeSave(T user, SignupRequest<T> request) {}
         default void afterSave(T user, SignupRequest<T> request) {}
         default void onError(Exception error, T user, SignupRequest<T> request) {}
@@ -54,8 +53,22 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         SignupHook<T> hook = request.getHook();
         
         try {
+            // Custom validation
             if (hook != null) {
-                hook.beforeValidation(user, request);
+                hook.customValidation(user, request);
+            }
+            
+            if (user.getUsername() == null || user.getUsername().isEmpty()) {
+                throw new IllegalArgumentException("Username is required");
+            }
+
+            if (user.getEmail() == null || user.getEmail().isEmpty()) {
+                throw new IllegalArgumentException("Email is required");
+            }
+
+            //validates email
+            if (!user.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                throw new IllegalArgumentException("Email is invalid");
             }
             
             if (baseUserRepository.existsByUsername(user.getUsername()) || baseUserRepository.existsByUsername(user.getEmail())) {
@@ -66,12 +79,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             if (baseUserRepository.existsByEmail(user.getEmail()) || baseUserRepository.existsByEmail(user.getUsername())) {
                 throw new IllegalArgumentException("Email already exists!");
             }
-            
-            // Hook: After validation
-            if (hook != null) {
-                hook.afterValidation(user, request);
-            }
-            
+                        
             // Create new user
             // Password will be setted on email confirmation
             // user.setPassword(passwordEncoder.encode(user.getPassword()));

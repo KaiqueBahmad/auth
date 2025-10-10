@@ -35,35 +35,27 @@ public class SampleController {
 
         }
 
+        
+
+
         @Override
-        public void afterSave(User user, SignupRequest<User> request) {
-            // TODO Auto-generated method stub
-            SignupHook.super.afterSave(user, request);
+        public void customValidation(User user, SignupRequest<User> request) throws IllegalArgumentException {
         }
 
         @Override
-        public void afterValidation(User user, SignupRequest<User> request) {
-            // TODO Auto-generated method stub
-            SignupHook.super.afterValidation(user, request);
+        public void afterSave(User user, SignupRequest<User> request) {
         }
 
         @Override
         public void beforeSave(User user, SignupRequest<User> request) {
-            // user.setEmailConfirmationToken(UUID.randomUUID().toString());
-            // user.setEmailConfirmed(false);
-            // user.setPasswordRecoverTries(1);
+            // Here you can modify the user object before it is saved to the database
+            // like changing the role, setting a custom confirmation code, etc.
+            // user.setRole(RoleType.ROLE_USER);
         }
 
-        @Override
-        public void beforeValidation(User user, SignupRequest<User> request) {
-            // TODO Auto-generated method stub
-            SignupHook.super.beforeValidation(user, request);
-        }
 
         @Override
         public void onError(Exception error, User user, SignupRequest<User> request) {
-            // TODO Auto-generated method stub
-            SignupHook.super.onError(error, user, request);
         }
     }
 
