@@ -46,7 +46,6 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
     
     public interface SignupRequest<T extends BaseUser> {
         T getUser();
-        Set<RoleType> getRoles();
         SignupHook<T> getHook();
     }
 
@@ -76,10 +75,8 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             // Create new user
             // Password will be setted on email confirmation
             // user.setPassword(passwordEncoder.encode(user.getPassword()));
-            
-            // Set roles from request
-            user.setRoles(new HashSet<>(request.getRoles()));
-            user.getPasswordRecovery().setTries(0);
+            String token = UUID.randomUUID().toString();
+            user.getEmailConfirmation().attachNewToken(token);
             
             emailService.sendMagicLink(user);
             

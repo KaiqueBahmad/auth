@@ -22,7 +22,7 @@ public class EmailConfirmation extends TokenData {
     }
 
     @Column(name = "email_confirmed", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean confirmed;
+    private Boolean confirmed = false;
 
     @Column(name = "email_confirmed_at")
     private LocalDateTime confirmedAt;

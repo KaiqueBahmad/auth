@@ -90,11 +90,6 @@ public class SampleController {
                 // TODO Auto-generated method stub
                 return HookHandler.getInstance();
             }
-
-            @Override
-            public Set<RoleType> getRoles() {
-                return Set.of(RoleType.ROLE_USER);
-            }
         };
         service.signup(request);
 
