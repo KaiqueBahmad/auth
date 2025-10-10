@@ -35,6 +35,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
     private final UserSessionLogService<T, U> userSessionLogService;
     private final IUserSessionLogInstantiator<T, U> sessionInstantiator;
     private final EmailService<T> emailService;
+    private final IPasswordValidator passwordValidator;
 
     public interface SignupHook<T extends BaseUser> {
         default void customValidation(T user, SignupRequest<T> request) throws IllegalArgumentException {}
@@ -197,10 +198,16 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException("Usuário não encontrado");
         }
+
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Senha é obrigatória");
+        }
+
+        this.passwordValidator.doValidate(password);
         
         T user = userOpt.get();
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Senha já foi definida anteriormente");
+            throw new IllegalArgumentException("Este usuário já possui uma senha definida");
         }
 
         user.setPassword(passwordEncoder.encode(password));
