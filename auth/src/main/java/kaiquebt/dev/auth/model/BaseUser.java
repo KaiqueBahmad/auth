@@ -16,7 +16,6 @@ import java.util.Set;
 public class BaseUser {
     public static enum RoleType {
         ROLE_USER,
-        ROLE_AFFILIATE,
         ROLE_ADMIN,
         ROLE_BANNED;
         

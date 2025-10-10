@@ -1,47 +1,71 @@
 # Auth Template Lib
 
-This lib will help you to faster implement auth on SpringBoot Project
+This library helps you quickly implement authentication in Spring Boot projects with built-in email confirmation, password recovery, and session logging.
 
-## Dependencies:
+## Features
+
+- JWT-based authentication
+- Email confirmation workflow
+- Password recovery system
+- Session logging with IP tracking
+- Customizable validation and hooks
+- Support for user impersonation (admin features)
+
+## Dependencies
+
 - Spring Boot (3.5.6)
+- Spring Security
+- Spring Data JPA
+- Spring Mail
+- JWT (io.jsonwebtoken)
 
 ## Getting Started
-In order to start using this Auth Template you must set some variables on your application.properties, configure some beans for customazing the behaviour of the template, and implement some JPA Entities, on client folder there is a full implementation that may help you.
 
-### Application properties
-```
-spring.application.name=client
+To use this Auth Template, you need to:
+1. Configure application properties
+2. Implement required JPA entities
+3. Create required beans
+4. Configure Spring Security
+
+The `client` folder contains a complete reference implementation.
+
+---
+
+## Application Properties
+
+```properties
+spring.application.name=your-app-name
 server.port=8081
+
 # Database connection
-spring.datasource.url=jdbc:postgresql://localhost:5432/auth-template
+spring.datasource.url=jdbc:postgresql://localhost:5432/your-database
 spring.datasource.username=postgres
 spring.datasource.password=postgres
-
 spring.jpa.hibernate.ddl-auto=update
 
-# Should be 64 characters long
-kaiquebt.dev.auth.jwt-secret=yoursecret
+# JWT Configuration (secret must be 64 characters long)
+kaiquebt.dev.auth.jwt-secret=your-64-character-secret-key-here
 kaiquebt.dev.auth.jwt-expiration-milliseconds=86400000
 
-#Base path for the routes create by the template
+# Base path for authentication routes
 kaiquebt.dev.auth.base-path=/api/auth/
 
-# Because we implement email confirmation we need a "external url"
-# it is, on the email we will send a link based on it in order to confirm account
-# if your api is avaliable through "yourdomain.com/api" this is your external url
-# on dev environment you can use ngrok or just set it to http://localhost:<PORT>
-kaiquebt.dev.auth.external-url=
+# External URL for email links
+# This is used to generate confirmation links in emails
+# In production: https://yourdomain.com
+# In development: http://localhost:8081 or use ngrok
+kaiquebt.dev.auth.external-url=http://localhost:8081
 
-# Email configuration for enabling the email confirmation features
-# Since spring mail is a dependencie we must define this variable
-spring.mail.host=
-spring.mail.port=
-spring.mail.username=
-spring.mail.password=
-spring.mail.properties.mail.smtp.ssl.enable=
-spring.mail.properties.mail.smtp.starttls.enable=
+# Email Configuration (Spring Mail)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.ssl.enable=false
+spring.mail.properties.mail.smtp.starttls.enable=true
 
-# (Optional) email override for the lib (in case you want to use the default spring.mail bean for other purposes in your application)
+# Optional: Override email config specifically for auth module
+# Use this if you want different email settings for auth vs other app features
 kaiquebt.dev.auth.mail.host=
 kaiquebt.dev.auth.mail.port=
 kaiquebt.dev.auth.mail.username=
@@ -50,189 +74,261 @@ kaiquebt.dev.auth.mail.properties.mail.smtp.ssl.enable=
 kaiquebt.dev.auth.mail.properties.mail.smtp.starttls.enable=
 ```
 
+---
 
+## Authentication Routes
 
-### Routes created by the template
-> **Note:** The signup/registration route is not included in this template and must be implemented by the user. See the [Implementing Signup](#implementing-signup) section for more details.
-> 
-**POST `/login`** - Authenticates users with credentials and returns a JWT access token.
+The template automatically creates the following routes:
 
-**POST `/resend-email`** - Resends the email confirmation message to a specified email address.
+### **POST `/api/auth/login`**
+Authenticates users and returns a JWT access token.
 
-**GET `/confirm-email`** - Checks if the authenticated user's email has been confirmed.
-
-**POST `/define-first-password`** - When confirming the email you will receive a JWT as response, you can use this session to use `/define-first-password` route, if the user loses its session before defining the password you can use the recover-account routes to set the first password without a session. 
-
-**Under development:**
-
-**POST `/refresh`** - Refreshes an expired JWT token. Supports admin impersonation by handling both user and impersonator tokens simultaneously.
-
-**POST `/recover-account/send-email`** - Initiates password recovery by sending a verification code to the user's email.
-
-**POST `/recover-account/verify`** - Validates the recovery token sent to the user's email.
-
-**POST `/recover-account/change-password`** - Completes the password recovery process by setting a new password after token verification.
-
-### Models to be implemented
-> In order to manage the persistence while keeping you free to personalize the entities and behaviour, we just declare Mapped Superclasses instead of real implementations, that would limit the user of the lib
-
-- #### Base User
-  
-  You must implement BaseUser (that is declared on the lib)
-  
-  also is needed to implement its repository
-
-  you can add whatever new fields your application may need here
-
-  Example of implementations:
-  
-  ##### Entity
-  ```java
-  @Entity
-  @Table(name = "users")
-  @Data
-  @AllArgsConstructor
-  @NoArgsConstructor
-  @SuperBuilder
-  @ToString
-  @EqualsAndHashCode(callSuper = true)
-  public class User extends BaseUser {
-      
-      @Column(name = "other", nullable = true)
-      private String other;
-  }
-  ```
-  ##### Repository
-  ```java
-  @Repository
-  public interface UserRepository extends BaseUserRepository<User> {
-  }
-  ```
-- #### Base User Log
-  
-  The template keeps a log of every sucessfull login, keep the ip of the user, and (as we support impersonating) also stores the admin that was on that account (if the login was not made by the user)
-
-  You can also add new fields to this class
-
-  Example of implementations:
-  
-  ##### Entity
-  ```java
-  @SuperBuilder
-  @Data
-  @ToString
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @Entity
-  @Table(name = "user_session_logs")
-  public class UserSessionLog extends BaseUserSessionLog<User> {
-      
-  }
-  ```
-  ##### Repository
-  ```java
-  @SuperBuilder
-  @Data
-  @ToString
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @Entity
-  @Table(name = "user_session_logs")
-  public class UserSessionLog extends BaseUserSessionLog<User> {
-      
-  }
-  ```
-- #### Email Template Bean
-
-  will be used on the building of the emails that will be sent to the user. 
-
-  Example of implementations:
-  ```java
-  @Service
-  public class EmailTemplateBean implements IEmailTemplateBean<User> {
-      
-      @Override
-      public String build(User user, String confirmationUrl) {
-          return String.format("""
-              your html template here
-              """, user.getUsername(), confirmationUrl, confirmationUrl, confirmationUrl);
-      }
-      
-      @Override
-      public String getEmailConfirmTitle() {
-          return "Client of kaiquebt auth module :D";
-      }
-  }
-  ```
-
-### Implementing Signup
-
-The signup/registration functionality is not pre-configured in the controller but can be implemented using the `BaseAuthService.signup()` method.
-This requires a `SignupRequest` that defines the new user, their roles, and an optional `SignupHook` for custom behavior.
-
-#### HookHandler
-
-The `HookHandler` class implements `SignupHook<User>` and allows you to intercept different stages of the signup process:
-
-```java
-private static class HookHandler implements SignupHook<User> {
-    private static HookHandler instance = new HookHandler();
-    public static HookHandler getInstance() { return instance; }
-    private HookHandler() {}
-
-    @Override
-    public void beforeSave(User user, SignupRequest<User> request) {
-        user.setEmailConfirmationToken(UUID.randomUUID().toString());
-        user.setEmailConfirmed(false);
-        user.setPasswordRecoverTries(1);
-    }
-
-    // Other lifecycle methods can be overridden as needed:
-    // beforeValidation(), afterValidation(), afterSave(), onError(Exception, User, SignupRequest)
+**Request Body:**
+```json
+{
+  "usernameOrEmail": "user@example.com",
+  "password": "userPassword"
 }
 ```
 
-**Purpose:**
-- `beforeSave()` is used here to set initial fields like `emailConfirmationToken`, `emailConfirmed`, and `passwordRecoverTries`.
-- Override other lifecycle methods (`beforeValidation`, `afterValidation`, `afterSave`, `onError`) to add validation steps, side-effects (emails, logs), or custom error handling.
-
-#### Example Signup Endpoint
-
-```java
-@GetMapping("/criar")
-public String createUser() {
-    User user = User.builder()
-        .email("kaiquebahmadt@gmail.com")
-        .other("aeiou")
-        .password("senhaforte")
-        .username("kaiquebt")
-        .build();
-
-    SignupRequest<User> request = new SignupRequest<User>() {
-        @Override public User getUser() { return user; }
-        @Override public SignupHook<User> getHook() { return HookHandler.getInstance(); }
-        @Override public Set<RoleType> getRoles() { return Set.of(RoleType.ROLE_USER); }
-    };
-
-    service.signup(request);
-    return "User registered";
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Login realizado com sucesso",
+  "data": {
+    "accessToken": "jwt-token-here"
+  }
 }
 ```
-
-#### Key Points
-- `BaseAuthService.signup()` handles user creation.
-- `SignupRequest` provides the user object, assigned roles, and the signup hook.
-- `SignupHook` provides lifecycle hooks to add custom logic during signup (init fields, send confirmation emails, audit logs, error handling).
 
 ---
 
+### **POST `/api/auth/resend-email`**
+Resends the email confirmation message.
 
-#### Security Configuration
+**Query Parameter:** `email`
 
-The application also requires a `SecurityConfig` class.  
-This configuration **depends heavily on business rules**, so it should be customized according to the authentication and authorization needs of your project.
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Email de confirmação enviado com sucesso!",
+  "data": {
+    "resended": true,
+    "after": 0
+  }
+}
+```
 
-Example skeleton:
+---
+
+### **GET `/api/auth/confirm-email`**
+Confirms the user's email address and returns a JWT token for the session.
+
+**Query Parameter:** `token`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Email confirmado com sucesso",
+  "data": {
+    "token": "jwt-token-here"
+  }
+}
+```
+
+**Important:** After email confirmation, the user receives a JWT token but still needs to set their password using the `/define-first-password` endpoint.
+
+---
+
+### **POST `/api/auth/define-first-password`**
+Sets the user's password after email confirmation. Requires authentication with the token from email confirmation.
+
+**Headers:**
+```
+Authorization: Bearer <token-from-email-confirmation>
+```
+
+**Request Body:**
+```json
+{
+  "password": "newSecurePassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Senha definida com sucesso",
+  "data": null
+}
+```
+
+---
+
+### **POST `/api/auth/recover-account/send-email`**
+Initiates password recovery by sending a recovery token to the user's email.
+
+**Query Parameter:** `email`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Se o email existir em nossa base de dados...",
+  "data": null
+}
+```
+
+**Note:** Password recovery routes are partially implemented. The verify and change-password endpoints are marked for future development.
+
+---
+
+## Required Implementations
+
+### 1. User Entity
+
+Extend `BaseUser` to create your user entity:
+
+```java
+@Entity
+@Table(name = "users")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
+@ToString
+@EqualsAndHashCode(callSuper = true)
+public class User extends BaseUser {
+    
+    // Add your custom fields here
+    @Column(name = "phone_number")
+    private String phoneNumber;
+    
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+}
+```
+
+**User Repository:**
+
+```java
+@Repository
+public interface UserRepository extends BaseUserRepository<User> {
+    // Add custom queries if needed
+}
+```
+
+---
+
+### 2. User Session Log Entity
+
+Extend `BaseUserSessionLog` to track login sessions:
+
+```java
+@SuperBuilder
+@Data
+@ToString
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = "user_session_logs")
+public class UserSessionLog extends BaseUserSessionLog<User> {
+    // Add custom fields if needed
+}
+```
+
+**Session Log Repository:**
+
+```java
+@Repository
+public interface UserSessionLogRepository extends BaseUserSessionLogRepository<UserSessionLog> {
+}
+```
+
+---
+
+### 3. Email Template Bean
+
+Implement email templates for confirmation and password recovery:
+
+```java
+@Service
+public class EmailTemplateBean implements IEmailTemplateBean<User> {
+    
+    @Override
+    public String buildEmailConfirm(User user, String confirmationUrl) {
+        return String.format("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .button { background-color: #4CAF50; color: white; padding: 14px 20px; 
+                             text-decoration: none; border-radius: 4px; display: inline-block; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Welcome, %s!</h2>
+                    <p>Thank you for registering. Please confirm your email address by clicking the button below:</p>
+                    <a href="%s" class="button">Confirm Email</a>
+                    <p>Or copy this link: %s</p>
+                    <p>This link will expire in 10 minutes.</p>
+                </div>
+            </body>
+            </html>
+            """, user.getUsername(), confirmationUrl, confirmationUrl);
+    }
+    
+    @Override
+    public String getEmailConfirmTitle() {
+        return "Confirm Your Email Address";
+    }
+    
+    @Override
+    public String buildRecoverAccount(User user, String recoverToken) {
+        return String.format("""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .token { background-color: #f0f0f0; padding: 10px; font-size: 18px; 
+                            font-weight: bold; text-align: center; border-radius: 4px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Password Recovery</h2>
+                    <p>Hello, %s!</p>
+                    <p>You requested to recover your password. Use the following token:</p>
+                    <div class="token">%s</div>
+                    <p>This token will expire in 10 minutes.</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                </div>
+            </body>
+            </html>
+            """, user.getUsername(), recoverToken);
+    }
+    
+    @Override
+    public String getRecoverAccountTitle() {
+        return "Password Recovery Request";
+    }
+}
+```
+
+---
+
+### 4. Security Configuration
+
+Configure Spring Security with JWT authentication:
 
 ```java
 @Configuration
@@ -255,13 +351,16 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(
-                    authorize -> authorize
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().permitAll()
+                        // Add your protected routes here
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(session -> 
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
         http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -270,6 +369,274 @@ public class SecurityConfig {
 }
 ```
 
-- Use `SecurityFilterChain` to define which endpoints are public and which require authentication.  
-- Insert JWT authentication filters (or another strategy) as needed.  
-- Adjust authorization rules according to your business logic.
+---
+
+## Implementing User Signup
+
+The signup functionality is not pre-configured as a controller endpoint, allowing you to customize the registration flow. Use the `BaseAuthService.signup()` method with a `SignupRequest`.
+
+### SignupHook Interface
+
+The `SignupHook` provides lifecycle hooks to customize the signup process:
+
+```java
+private static class SignupHookHandler implements SignupHook<User> {
+    private static final SignupHookHandler INSTANCE = new SignupHookHandler();
+    
+    public static SignupHookHandler getInstance() {
+        return INSTANCE;
+    }
+    
+    private SignupHookHandler() {}
+
+    @Override
+    public void customValidation(User user, SignupRequest<User> request) throws IllegalArgumentException {
+        // Add custom validation logic
+        // Example: validate phone number format, age restrictions, etc.
+        if (user.getUsername().length() < 3) {
+            throw new IllegalArgumentException("Username must be at least 3 characters");
+        }
+    }
+
+    @Override
+    public void beforeSave(User user, SignupRequest<User> request) {
+        // Initialize fields before saving to database
+        // The library handles email confirmation token creation
+        
+        // Example: set default values
+        user.setRoles(Set.of(RoleType.ROLE_USER));
+    }
+
+    @Override
+    public void afterSave(User user, SignupRequest<User> request) {
+        // Perform actions after user is saved
+        // Example: send welcome notification, create user profile, log analytics
+        System.out.println("New user registered: " + user.getEmail());
+    }
+
+    @Override
+    public void onError(Exception error, User user, SignupRequest<User> request) {
+        // Handle errors during signup
+        // Example: log errors, send alerts, cleanup resources
+        System.err.println("Signup error for " + user.getEmail() + ": " + error.getMessage());
+    }
+}
+```
+
+### Example Signup Endpoint
+
+```java
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final BaseAuthService<User, UserSessionLog> authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<String> registerUser(@RequestBody RegisterDto dto) {
+        User user = User.builder()
+            .email(dto.getEmail())
+            .username(dto.getUsername())
+            .phoneNumber(dto.getPhoneNumber())
+            .build();
+
+        SignupRequest<User> request = new SignupRequest<User>() {
+            @Override
+            public User getUser() {
+                return user;
+            }
+
+            @Override
+            public SignupHook<User> getHook() {
+                return SignupHookHandler.getInstance();
+            }
+        };
+
+        try {
+            String message = authService.signup(request);
+            return ResponseEntity.ok(message);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+}
+```
+
+---
+
+## User Registration Flow
+
+Understanding the complete registration flow:
+
+1. **User Registration**
+   - Call `authService.signup()` with user details
+   - User is saved to database without a password
+   - Email confirmation token is generated and stored
+   - Confirmation email is sent automatically
+
+2. **Email Confirmation**
+   - User clicks link in email
+   - `GET /api/auth/confirm-email?token=...` is called
+   - Email is marked as confirmed
+   - JWT token is returned
+
+3. **Password Setup**
+   - User uses JWT token from step 2
+   - Calls `POST /api/auth/define-first-password` with new password
+   - Password is hashed and stored
+   - User can now login normally
+
+4. **Regular Login**
+   - User provides email/username and password
+   - `POST /api/auth/login` returns JWT token
+   - Token is used for authenticated requests
+
+---
+
+## Optional: Custom Password Validation
+
+By default, the library accepts any non-empty password. To add custom validation:
+
+```java
+@Service
+public class CustomPasswordValidator implements IPasswordValidator {
+    
+    @Override
+    public void doValidate(String password) throws IllegalArgumentException {
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
+        }
+        
+        if (!password.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException("Password must contain at least one uppercase letter");
+        }
+        
+        if (!password.matches(".*[a-z].*")) {
+            throw new IllegalArgumentException("Password must contain at least one lowercase letter");
+        }
+        
+        if (!password.matches(".*\\d.*")) {
+            throw new IllegalArgumentException("Password must contain at least one number");
+        }
+        
+        if (!password.matches(".*[!@#$%^&*()].*")) {
+            throw new IllegalArgumentException("Password must contain at least one special character");
+        }
+    }
+}
+```
+
+This bean will automatically be picked up by Spring and used for password validation.
+
+---
+
+## Session Logging
+
+The library automatically logs all successful authentication events, including:
+
+- Login events (with IP address and user agent)
+- Token refresh events
+- Admin impersonation events
+
+Access session history through the `UserSessionLogService`:
+
+```java
+@Autowired
+private UserSessionLogService<User, UserSessionLog> sessionLogService;
+
+public Page<SessionHistoryDto> getUserSessions(Long userId, int page, int size) {
+    return sessionLogService.getSessionHistory(userId, page, size, null, null);
+}
+```
+
+---
+
+## User Roles
+
+The library includes predefined role types:
+
+- `ROLE_USER` - Standard user
+- `ROLE_AFFILIATE` - Affiliate user
+- `ROLE_ADMIN` - Administrator
+- `ROLE_BANNED` - Banned user
+
+Roles are stored in the `user_roles` table and can be checked using Spring Security's `@PreAuthorize` annotation:
+
+```java
+@PreAuthorize("hasRole('ADMIN')")
+@GetMapping("/admin/users")
+public List<User> getAllUsers() {
+    // Only accessible by admins
+}
+```
+
+---
+
+## Token Structure
+
+JWT tokens include the following claims:
+
+- `sub` (subject): User's email
+- `username`: User's username
+- `email`: User's email
+- `roles`: Array of user roles
+- `iat` (issued at): Token creation timestamp
+- `exp` (expiration): Token expiration timestamp
+
+---
+
+## Error Handling
+
+The library uses `StandardResponse` wrapper for consistent API responses:
+
+```java
+{
+  "success": boolean,
+  "message": "string",
+  "data": object | null
+}
+```
+
+Common HTTP status codes:
+- `200 OK`: Successful operation
+- `400 Bad Request`: Validation error or invalid input
+- `401 Unauthorized`: Invalid credentials
+- `500 Internal Server Error`: Server error
+
+---
+
+## Testing
+
+See `ClientApplicationTests.java` for comprehensive test examples covering:
+
+- User registration with email sending
+- Email confirmation flow
+- Duplicate username/email detection
+- Invalid email format validation
+- Expired token handling
+- Password definition
+
+---
+
+## Troubleshooting
+
+### Email not sending
+- Check SMTP credentials in `application.properties`
+- Verify firewall/network allows SMTP connections
+- For Gmail: enable "Less secure app access" or use App Passwords
+- Check logs for `JavaMailSender` errors
+
+### JWT validation failing
+- Ensure `jwt-secret` is exactly 64 characters
+- Check token expiration settings
+- Verify `Authorization: Bearer <token>` header format
+
+## Future Features (Under Development)
+
+- Token refresh endpoint
+- Complete password recovery flow with token verification
+- Password change for already-confirmed accounts
+- Admin impersonation features
+
+---
