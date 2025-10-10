@@ -1,6 +1,8 @@
 package kaiquebt.dev.auth.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -132,14 +134,14 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         }
         
         T user = userOpt.get();
-        if (user.getEmailConfirmed()) {
+        if (user.getEmailConfirmation().getConfirmed()) {
             throw new IllegalArgumentException("Email já foi confirmado");
         }
 
-        long canResentAfter = user.canResendAfter();
-        if (canResentAfter != 0) {
+        LocalDateTime canResentAfter = user.getEmailConfirmation().canResendTokenAfter();
+        if (canResentAfter.isBefore(LocalDateTime.now())) {
             return ResendEmailResponse.builder()
-            .after(canResentAfter)
+            .after(canResentAfter.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
             .message("Email já foi enviado recentemente. Tente novamente em alguns minutos")
             .resended(false)
             .build();
@@ -147,13 +149,11 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
 
         String token = UUID.randomUUID().toString();
 
-        user.setEmailConfirmationToken(token);
-        user.setTokenExpiresAt(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
+        user.getEmailConfirmation().attachNewToken(token);
 
         emailService.sendMagicLink(user);
         
         this.baseUserRepository.save(user);
-
 
         return ResendEmailResponse.builder()
             .after(0L)
@@ -170,23 +170,19 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         }
         
         T user = userOpt.get();
-        if (user.getEmailConfirmed()) {
-            // cleaning token
-            user.setEmailConfirmationToken(null);
-            user.setTokenExpiresAt(null);
+        if (user.getEmailConfirmation().getConfirmed()) {
+            user.getEmailConfirmation().clear();
             this.baseUserRepository.save(user);
             throw new IllegalArgumentException("Email já foi confirmado");
         }
         
-        if (user.getTokenExpiresAt() == null || user.getTokenExpiresAt().isBefore(LocalDateTime.now())) {
+        if (user.getEmailConfirmation().isExpired()) {
             throw new IllegalArgumentException("Token expirado");
         }
         
-        user.setEmailConfirmed(true);
-        user.setEmailConfirmationToken(null);
-        user.setTokenExpiresAt(null);
+        user.getEmailConfirmation().markAsConfirmed();
         this.baseUserRepository.save(user);
-        
+
         return jwtTokenProvider.generateToken(user).token;
     }
 
@@ -215,29 +211,30 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
         }
         
         T user = userOpt.get();
-        if (!user.getEmailConfirmed()) {
+        if (!user.getEmailConfirmation().getConfirmed()) {
             throw new IllegalArgumentException("Email não foi confirmado");
         }
-
-        String token = UUID.randomUUID().toString();
-        
+       
         // Last recover must be more than 1 day ago
-        boolean hasActiveRecover = user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now());
-        if (
-            !hasActiveRecover &&
-            user.getPasswordRecoverExpiration() != null && user.getPasswordRecoverExpiration().isAfter(LocalDateTime.now().minusDays(1))
-        ) {
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasActiveRecover = user.getPasswordRecovery().getToken() != null
+            && user.getPasswordRecovery().getTokenExpiresAt() != null
+            && user.getPasswordRecovery().getTokenExpiresAt().isAfter(now);
+
+        boolean cooldownIsOk =
+            user.getPasswordRecovery().getLastTokenCreatedAt() != null
+            && user.getPasswordRecovery().getLastTokenCreatedAt().isAfter(now.minusDays(1));
+        if (!hasActiveRecover && cooldownIsOk) {
             return "Um email de recuperação já foi enviado recentemente. Tente novamente mais tarde. O limite é de 1 recuperação a cada 24 horas.";
         }
+        
         if (hasActiveRecover) {
             return null;
         }
 
-        user.setPasswordRecoverToken(token);
-        user.setPasswordRecoverExpiration(LocalDateTime.now().plus(BaseUser.DEFAULT_TOKEN_EXPIRATION));
-        
-
-        
+        String token = UUID.randomUUID().toString();
+                
+        user.getPasswordRecovery().attachNewToken(token);
         emailService.sendRecoverEmail(user);
         
         this.baseUserRepository.save(user);

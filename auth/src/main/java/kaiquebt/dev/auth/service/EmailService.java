@@ -46,13 +46,14 @@ public class EmailService<T extends BaseUser> {
             helper.setFrom(fromEmail);
             helper.setSubject(emailTemplateBean.getEmailConfirmTitle());
             
+            // TODO - this should not work like this, the lib user should implement its own magic link page
+            // cause this page is just blank
             String magicLinkUrl = UriComponentsBuilder.fromUriString(externalUrl)
                 .path(apiMapping + "confirm-email")
-                .queryParam("token", user.getEmailConfirmationToken())
+                .queryParam("token", user.getEmailConfirmation().getToken())
                 .build()
                 .toUriString();
 
-                
             String html = emailTemplateBean.buildEmailConfirm(user, magicLinkUrl);
             
             helper.setText(html, true);
@@ -74,8 +75,7 @@ public class EmailService<T extends BaseUser> {
             helper.setFrom(fromEmail);
             helper.setSubject(emailTemplateBean.getRecoverAccountTitle());
                 
-            String html = emailTemplateBean.buildRecoverAccount(user, user.getPasswordRecoverToken());
-            
+            String html = emailTemplateBean.buildRecoverAccount(user, user.getPasswordRecovery().getToken());
             helper.setText(html, true);
             
             mailSender.send(message);

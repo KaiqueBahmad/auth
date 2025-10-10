@@ -2,12 +2,10 @@ package kaiquebt.dev.auth.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Set;
 
 @MappedSuperclass
@@ -51,80 +49,21 @@ public class BaseUser {
     @Column(name = "role")
     private Set<RoleType> roles;
 
-    // APENAS CAMPOS PARA MAGIC LINK
-    @Column(name = "email_confirmed", nullable = false)
-    private Boolean emailConfirmed;
+    @Builder.Default
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "token", column = @Column(name = "email_confirmation_token")),
+        @AttributeOverride(name = "tokenExpiresAt", column = @Column(name = "email_confirmation_token_expires_at")),
+        @AttributeOverride(name = "lastTokenCreatedAt", column = @Column(name = "last_email_confirmation_token_created_at"))
+    })
+    private EmailConfirmation emailConfirmation = new EmailConfirmation();
     
-    @Column(name = "email_confirmed_at")
-    private LocalDateTime emailConfirmedAt;
-    
-    @Column(name = "email_confirmation_token")
-    private String emailConfirmationToken;
-    
-    @Column(name = "token_expires_at")
-    private LocalDateTime tokenExpiresAt;
-
-
-    // PASSWORD RECOVERY FIELDS
-    @Column(name = "password_recover_token")
-    private String passwordRecoverToken;
-
-    @Column(name = "password_recover_expiration")
-    private LocalDateTime passwordRecoverExpiration;
-
-    @Column(name = "password_recover_tries", nullable = false)
-    private Integer passwordRecoverTries;
-
-    @Column(name = "password_recover_last")
-    private LocalDateTime passwordRecoverLast;
-
-
-    public static final Duration DEFAULT_TOKEN_EXPIRATION = Duration.ofHours(24);
-    public static final Duration DEFAULT_USER_RECOVER_TOKEN_EXPIRATION = Duration.ofMinutes(30);
-
-
-    public long canResendAfter() {
-        if (tokenExpiresAt == null) {
-            return 0;
-        }
-        
-        LocalDateTime tokenGeneratedAt = tokenExpiresAt.minus(DEFAULT_TOKEN_EXPIRATION);
-        LocalDateTime fiveMinutesAfterGeneration = tokenGeneratedAt.plusMinutes(5);
-        
-        if (LocalDateTime.now().isAfter(fiveMinutesAfterGeneration)) {
-            return 0;
-        }
-        
-        return fiveMinutesAfterGeneration.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
-    public void clearPasswordRecoveryData() {
-        this.passwordRecoverToken = null;
-        this.passwordRecoverExpiration = null;
-        this.passwordRecoverTries = 0;
-        this.passwordRecoverLast = LocalDateTime.now();
-    }
-
-    public long canRecoverAfter() {        
-        if (passwordRecoverLast != null) {
-            System.out.println(this.passwordRecoverLast.plusMinutes(30).isAfter(LocalDateTime.now()));
-            if (this.passwordRecoverLast.plusMinutes(30).isAfter(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Houve uma alteração de senha recente, aguarde 30 minutos até a próxima recuperação");
-            }
-        }
-
-        if (passwordRecoverExpiration == null) {
-            return 0;
-        }
-        
-        LocalDateTime tokenGeneratedAt = passwordRecoverExpiration.minus(DEFAULT_USER_RECOVER_TOKEN_EXPIRATION);
-        LocalDateTime fiveMinutesAfterGeneration = tokenGeneratedAt.plusMinutes(5);
-        
-        if (LocalDateTime.now().isAfter(fiveMinutesAfterGeneration)) {
-            return 0;
-        }
-        
-        return fiveMinutesAfterGeneration.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-    }
-
+    @Builder.Default
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "token", column = @Column(name = "password_recover_token")),
+        @AttributeOverride(name = "tokenExpiresAt", column = @Column(name = "password_recover_token_expires_at")),
+        @AttributeOverride(name = "lastTokenCreatedAt", column = @Column(name = "last_password_recover_token_created_at"))
+    })
+    private PasswordRecovery passwordRecovery = new PasswordRecovery(); 
 }
