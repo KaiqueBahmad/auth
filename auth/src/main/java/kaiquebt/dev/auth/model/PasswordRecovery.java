@@ -26,7 +26,7 @@ public class PasswordRecovery extends TokenData {
     private LocalDateTime recoveredAt;
 
     @Column(name = "password_recover_tries", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
-    private Integer tries;
+    private Integer tries = 0;
 
     public boolean incrementTries() {
         if (this.tries == null) {

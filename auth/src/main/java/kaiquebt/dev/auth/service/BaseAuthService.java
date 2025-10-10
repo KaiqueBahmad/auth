@@ -79,7 +79,7 @@ public class BaseAuthService<T extends BaseUser, U extends BaseUserSessionLog<T>
             
             // Set roles from request
             user.setRoles(new HashSet<>(request.getRoles()));
-            
+            user.getPasswordRecovery().setTries(0);
             
             emailService.sendMagicLink(user);
             
